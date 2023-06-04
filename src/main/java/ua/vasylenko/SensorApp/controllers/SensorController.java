@@ -8,13 +8,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import ua.vasylenko.SensorApp.dto.MeasurementDTO;
 import ua.vasylenko.SensorApp.dto.SensorDTO;
+import ua.vasylenko.SensorApp.models.Measurement;
 import ua.vasylenko.SensorApp.models.Sensor;
 import ua.vasylenko.SensorApp.services.SensorService;
-import ua.vasylenko.SensorApp.util.SensorNotCreatedException;
+import ua.vasylenko.SensorApp.util.MeasurementIssuesException;
+import ua.vasylenko.SensorApp.util.SensorErrorResponse;
+import ua.vasylenko.SensorApp.util.SensorWasNotCreatedException;
+
+import java.sql.SQLException;
 
 @RestController
-@RequestMapping("/sensors")
 public class SensorController {
     private final SensorService sensorService;
     private final ModelMapper modelMapper;
@@ -25,19 +30,41 @@ public class SensorController {
         this.modelMapper = modelMapper;
     }
 
-    @PostMapping("/registration")
+    @PostMapping("/sensor/registration")
     public ResponseEntity<HttpStatus> registration(@RequestBody @Valid SensorDTO sensorDTO, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            StringBuilder sb = new StringBuilder();
-            for (FieldError error : bindingResult.getFieldErrors())
-                sb.append(error.getField()).append(" - ").append(error.getDefaultMessage()).append(";");
-            throw new SensorNotCreatedException(sb.toString());
-        }
+        checkErrors(bindingResult, sensorDTO);
         sensorService.registration(convertToSensor(sensorDTO));
         return ResponseEntity.ok(HttpStatus.OK);
     }
 
-    private Sensor convertToSensor(SensorDTO sensorDTO) {
-        return modelMapper.map(sensorDTO, Sensor.class);
+    private static <T> void checkErrors(BindingResult bindingResult, T object) {
+        if (bindingResult.hasErrors()) {
+            StringBuilder sb = new StringBuilder();
+            for (FieldError error : bindingResult.getFieldErrors())
+                sb.append(error.getField()).append(" - ").append(error.getDefaultMessage()).append(";");
+            if (object.getClass().equals(SensorDTO.class))
+                throw new SensorWasNotCreatedException(sb.toString());
+            else if (object.getClass().equals(MeasurementDTO.class))
+                throw new MeasurementIssuesException(sb.toString());
+        }
     }
+
+    @PostMapping("/measurements/add")
+    public ResponseEntity<HttpStatus> addNewMeasurement(@RequestBody @Valid MeasurementDTO measurementDTO, BindingResult bindingResult) {
+
+        return null;
+    }
+
+    private <T, V> V convertToSensor(T object) {
+        if (object.getClass().equals())
+        return modelMapper.map(object, Sensor.class);
+    }
+
+
+    @ExceptionHandler
+    private ResponseEntity<SensorErrorResponse> handleRegistrationException(SQLException e) {
+        SensorErrorResponse response = new SensorErrorResponse("This name is already exist! Try another one");
+        return  new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
 }
