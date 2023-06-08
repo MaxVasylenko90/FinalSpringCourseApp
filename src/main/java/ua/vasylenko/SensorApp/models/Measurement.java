@@ -1,12 +1,7 @@
 package ua.vasylenko.SensorApp.models;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import org.springframework.format.annotation.DateTimeFormat;
-import ua.vasylenko.SensorApp.util.SensorWasNotCreatedException;
+import jakarta.validation.constraints.*;
 
 import java.time.LocalDateTime;
 
@@ -19,21 +14,21 @@ public class Measurement {
     @Column(name = "value")
     @Min(value = -100)
     @Max(value = 100)
-    @NotEmpty
+    @NotNull
     private double value;
 
     @Column(name = "raining")
-    @NotEmpty
+    @NotNull
     private boolean isRaining;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sensorId", referencedColumnName = "id")
-    @NotEmpty
+    @NotNull
     private Sensor sensor;
 
     @Column(name = "time")
     private LocalDateTime time;
 
-    public Measurement(double value, boolean isRaining, Sensor sensor) {
+    public Measurement(double value,  boolean isRaining, Sensor sensor) {
         this.value = value;
         this.isRaining = isRaining;
         this.sensor = sensor;
