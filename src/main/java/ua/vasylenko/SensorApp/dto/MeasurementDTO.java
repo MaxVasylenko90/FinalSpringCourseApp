@@ -1,6 +1,7 @@
 package ua.vasylenko.SensorApp.dto;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.*;
@@ -11,13 +12,10 @@ public class MeasurementDTO {
     @Max(value = 100)
     @NotNull
     private double value;
-
     @NotNull
     private boolean isRaining;
-    @ManyToOne
-    @JoinColumn(name = "sensorId", referencedColumnName = "id")
     @NotNull
-    private Sensor sensor;
+    private SensorDTO sensor;
 
     public double getValue() {
         return value;
@@ -35,11 +33,32 @@ public class MeasurementDTO {
         isRaining = raining;
     }
 
-    public Sensor getSensor() {
+    public SensorDTO getSensor() {
         return sensor;
     }
 
-    public void setSensor(Sensor sensor) {
+    public void setSensor(SensorDTO sensor) {
         this.sensor = sensor;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MeasurementDTO that)) return false;
+
+        if (Double.compare(that.getValue(), getValue()) != 0) return false;
+        if (isRaining() != that.isRaining()) return false;
+        return getSensor().equals(that.getSensor());
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        temp = Double.doubleToLongBits(getValue());
+        result = (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (isRaining() ? 1 : 0);
+        result = 31 * result + getSensor().hashCode();
+        return result;
     }
 }

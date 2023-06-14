@@ -1,5 +1,8 @@
 package ua.vasylenko.SensorApp.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
@@ -11,6 +14,7 @@ public class Sensor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @JsonIgnore
     private int id;
 
     @Column(name = "name")
@@ -19,6 +23,7 @@ public class Sensor {
     private String name;
 
     @OneToMany(mappedBy = "sensor", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Measurement> measurements;
 
     public Sensor(String name) {
@@ -50,5 +55,23 @@ public class Sensor {
 
     public void setMeasurements(List<Measurement> measurements) {
         this.measurements = measurements;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Sensor sensor)) return false;
+
+        if (getId() != sensor.getId()) return false;
+        if (getName() != null ? !getName().equals(sensor.getName()) : sensor.getName() != null) return false;
+        return getMeasurements() != null ? getMeasurements().equals(sensor.getMeasurements()) : sensor.getMeasurements() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getId();
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
+        result = 31 * result + (getMeasurements() != null ? getMeasurements().hashCode() : 0);
+        return result;
     }
 }

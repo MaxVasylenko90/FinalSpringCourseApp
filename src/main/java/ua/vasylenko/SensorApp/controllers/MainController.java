@@ -16,9 +16,10 @@ import ua.vasylenko.SensorApp.services.MeasurementService;
 import ua.vasylenko.SensorApp.services.SensorService;
 import ua.vasylenko.SensorApp.util.*;
 
-import java.sql.SQLException;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 public class MainController {
@@ -55,6 +56,20 @@ public class MainController {
         } else throw new MeasurementIssuesException("Sensor with name like this doesn't exist!");
     }
 
+    @GetMapping("/measurements")
+    public List<MeasurementDTO> allMeasurements() {
+        return measurementService.findAll().stream().map(this::convertToMeasurementDTO).collect(Collectors.toList());
+    }
+
+    @GetMapping("/measurements/rainyDaysCount")
+    public int rainyDays() {
+        return measurementService.rainyDaysCount().size();
+    }
+
+    private MeasurementDTO convertToMeasurementDTO(Measurement measurement) {
+        return modelMapper.map(measurement, MeasurementDTO.class);
+    }
+
     public <T> void checkErrors(BindingResult bindingResult, T object) {
         if (object.getClass().equals(SensorDTO.class))
             sensorValidator.validate(object, bindingResult);
@@ -72,22 +87,8 @@ public class MainController {
     }
 
     @ExceptionHandler
-    private ResponseEntity<ErrorResponse> handleRegistrationException(SQLException e) {
+    private ResponseEntity<ErrorResponse> handleRegistrationException(Exception e) {
         ErrorResponse response = new ErrorResponse(e.getMessage());
         return  new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-
-    @ExceptionHandler
-    private ResponseEntity<ErrorResponse> handleMeasurementException (MeasurementIssuesException e) {
-        ErrorResponse response = new ErrorResponse(e.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-    @ExceptionHandler
-    private ResponseEntity<ErrorResponse> handleSensorException (SensorWasNotCreatedException e) {
-        ErrorResponse response = new ErrorResponse(e.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-
-
-
 }

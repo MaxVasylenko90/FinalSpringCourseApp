@@ -9,6 +9,7 @@ import ua.vasylenko.SensorApp.repositories.MeasurementRepository;
 import ua.vasylenko.SensorApp.repositories.SensorRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -28,5 +29,13 @@ public class MeasurementService {
         measurement.setSensor(sensor);
         measurement.setTime(LocalDateTime.now());
         measurementRepository.save(measurement);
+    }
+
+    public List<Measurement> findAll() {
+        return measurementRepository.findAll();
+    }
+
+    public List<Measurement> rainyDaysCount() {
+        return measurementRepository.countRainyDays();
     }
 }

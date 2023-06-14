@@ -1,5 +1,6 @@
 package ua.vasylenko.SensorApp.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 
@@ -75,5 +76,30 @@ public class Measurement {
 
     public void setTime(LocalDateTime time) {
         this.time = time;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Measurement that)) return false;
+
+        if (getId() != that.getId()) return false;
+        if (Double.compare(that.getValue(), getValue()) != 0) return false;
+        if (isRaining() != that.isRaining()) return false;
+        if (!getSensor().equals(that.getSensor())) return false;
+        return getTime() != null ? getTime().equals(that.getTime()) : that.getTime() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = getId();
+        temp = Double.doubleToLongBits(getValue());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (isRaining() ? 1 : 0);
+        result = 31 * result + getSensor().hashCode();
+        result = 31 * result + (getTime() != null ? getTime().hashCode() : 0);
+        return result;
     }
 }
