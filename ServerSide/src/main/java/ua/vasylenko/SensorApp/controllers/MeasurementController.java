@@ -9,40 +9,25 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import ua.vasylenko.SensorApp.dto.MeasurementDTO;
-import ua.vasylenko.SensorApp.dto.SensorDTO;
 import ua.vasylenko.SensorApp.models.Measurement;
-import ua.vasylenko.SensorApp.models.Sensor;
 import ua.vasylenko.SensorApp.services.MeasurementService;
-import ua.vasylenko.SensorApp.services.SensorService;
 import ua.vasylenko.SensorApp.util.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-public class MainController {
-    private final SensorService sensorService;
+public class MeasurementController {
     private final MeasurementService measurementService;
     private final ModelMapper modelMapper;
-    private final SensorValidator sensorValidator;
     private final MeasurementValidator measurementValidator;
 
     @Autowired
-    public MainController(SensorService sensorService, MeasurementService measurementService, ModelMapper modelMapper, SensorValidator sensorValidator, MeasurementValidator measurementValidator) {
-        this.sensorService = sensorService;
+    public MeasurementController(MeasurementService measurementService, ModelMapper modelMapper, MeasurementValidator measurementValidator) {
         this.measurementService = measurementService;
         this.modelMapper = modelMapper;
-        this.sensorValidator = sensorValidator;
         this.measurementValidator = measurementValidator;
-    }
-
-    @PostMapping("/sensor/registration")
-    public ResponseEntity<HttpStatus> registration(@RequestBody @Valid SensorDTO sensorDTO, BindingResult bindingResult) {
-        checkErrors(bindingResult, sensorDTO);
-        sensorService.registration(modelMapper.map(sensorDTO, Sensor.class));
-        return ResponseEntity.ok(HttpStatus.OK);
     }
 
     @PostMapping("/measurements/add")
@@ -70,25 +55,19 @@ public class MainController {
         return modelMapper.map(measurement, MeasurementDTO.class);
     }
 
-    public <T> void checkErrors(BindingResult bindingResult, T object) {
-        if (object.getClass().equals(SensorDTO.class))
-            sensorValidator.validate(object, bindingResult);
-        else if (object.getClass().equals(MeasurementDTO.class))
-            measurementValidator.validate(object, bindingResult);
+    public void checkErrors(BindingResult bindingResult, MeasurementDTO object) {
+        measurementValidator.validate(object, bindingResult);
         if (bindingResult.hasErrors()) {
             StringBuilder sb = new StringBuilder();
             for (FieldError error : bindingResult.getFieldErrors())
                 sb.append(error.getField()).append(" - ").append(error.getDefaultMessage()).append(";");
-            if (object.getClass().equals(SensorDTO.class))
-                throw new SensorWasNotCreatedException(sb.toString());
-            else if (object.getClass().equals(MeasurementDTO.class))
-                throw new MeasurementIssuesException(sb.toString());
+            throw new MeasurementIssuesException(sb.toString());
         }
     }
 
     @ExceptionHandler
     private ResponseEntity<ErrorResponse> handleRegistrationException(Exception e) {
         ErrorResponse response = new ErrorResponse(e.getMessage());
-        return  new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 }
