@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import ua.vasylenko.SensorApp.dto.MeasurementDTO;
+import ua.vasylenko.SensorApp.models.Measurement;
 import ua.vasylenko.SensorApp.services.SensorService;
 
 @Component
@@ -20,8 +21,10 @@ public class MeasurementValidator implements Validator{
         }
         @Override
         public void validate(Object target, Errors errors) {
-            MeasurementDTO measurementDTO = (MeasurementDTO) target;
-            if (sensorService.findByName(measurementDTO.getSensor().getName()).isEmpty())
+            Measurement measurement = (Measurement) target;
+            if (measurement.getSensor() == null)
+                return;
+            if (sensorService.findByName(measurement.getSensor().getName()).isEmpty())
                 errors.rejectValue("sensor", "", "Sensor with this name is not exist");
         }
 }

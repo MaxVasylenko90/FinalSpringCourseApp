@@ -7,20 +7,20 @@ import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "measurement")
 public class Measurement {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private int id;
+    private Integer id;
     @Column(name = "value")
+    @NotNull
     @Min(value = -100)
     @Max(value = 100)
+    private Double value;
     @NotNull
-    private double value;
-
     @Column(name = "raining")
-    @NotNull
-    private boolean isRaining;
+    private Boolean isRaining;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sensorId", referencedColumnName = "id")
     @NotNull
@@ -29,7 +29,7 @@ public class Measurement {
     @Column(name = "time")
     private LocalDateTime time;
 
-    public Measurement(double value,  boolean isRaining, Sensor sensor) {
+    public Measurement(Double value,  Boolean isRaining, Sensor sensor) {
         this.value = value;
         this.isRaining = isRaining;
         this.sensor = sensor;
@@ -38,27 +38,27 @@ public class Measurement {
     public Measurement() {
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
-    public double getValue() {
+    public Double getValue() {
         return value;
     }
 
-    public void setValue(double value) {
+    public void setValue(Double value) {
         this.value = value;
     }
 
-    public boolean isRaining() {
+    public Boolean isRaining() {
         return isRaining;
     }
 
-    public void setRaining(boolean raining) {
+    public void setRaining(Boolean raining) {
         isRaining = raining;
     }
 

@@ -8,12 +8,12 @@ import jakarta.validation.constraints.*;
 import ua.vasylenko.SensorApp.models.Sensor;
 
 public class MeasurementDTO {
+    @NotNull
     @Min(value = -100)
     @Max(value = 100)
+    private Double value;
     @NotNull
-    private double value;
-    @NotNull
-    private boolean isRaining;
+    private Boolean isRaining;
     @NotNull
     private SensorDTO sensor;
 

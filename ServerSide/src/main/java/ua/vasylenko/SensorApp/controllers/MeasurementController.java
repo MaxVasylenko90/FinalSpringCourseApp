@@ -6,14 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import ua.vasylenko.SensorApp.dto.MeasurementDTO;
+import ua.vasylenko.SensorApp.dto.MeasurementResponse;
 import ua.vasylenko.SensorApp.models.Measurement;
 import ua.vasylenko.SensorApp.services.MeasurementService;
 import ua.vasylenko.SensorApp.util.*;
-
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -21,29 +19,30 @@ import java.util.stream.Collectors;
 public class MeasurementController {
     private final MeasurementService measurementService;
     private final ModelMapper modelMapper;
-    private final MeasurementValidator measurementValidator;
+    private final ErrorsUtil errorsUtil;
 
     @Autowired
-    public MeasurementController(MeasurementService measurementService, ModelMapper modelMapper, MeasurementValidator measurementValidator) {
+    public MeasurementController(MeasurementService measurementService, ModelMapper modelMapper, ErrorsUtil errorsUtil) {
         this.measurementService = measurementService;
         this.modelMapper = modelMapper;
-        this.measurementValidator = measurementValidator;
+        this.errorsUtil = errorsUtil;
     }
 
     @PostMapping("/measurements/add")
     public ResponseEntity<HttpStatus> addNewMeasurement(@RequestBody @Valid MeasurementDTO measurementDTO, BindingResult bindingResult) {
-        checkErrors(bindingResult, measurementDTO);
-        Optional<String> sensorName = Optional.of(measurementDTO.getSensor().getName());
+        Measurement measurement = modelMapper.map(measurementDTO, Measurement.class);
+        errorsUtil.checkErrors(bindingResult, measurement);
+        Optional<String> sensorName = Optional.of(measurement.getSensor().getName());
         if (sensorName != null) {
-            Measurement measurement = modelMapper.map(measurementDTO, Measurement.class);
             measurementService.save(measurement, sensorName.get());
             return ResponseEntity.ok(HttpStatus.OK);
-        } else throw new MeasurementIssuesException("Sensor with name like this doesn't exist!");
+        } else throw new SensorOrMeasurementIssuesException("Sensor with name like this doesn't exist!");
     }
 
     @GetMapping("/measurements")
-    public List<MeasurementDTO> allMeasurements() {
-        return measurementService.findAll().stream().map(this::convertToMeasurementDTO).collect(Collectors.toList());
+    public MeasurementResponse allMeasurements() {
+        return new MeasurementResponse(measurementService.findAll().stream()
+                .map(this::convertToMeasurementDTO).collect(Collectors.toList()));
     }
 
     @GetMapping("/measurements/rainyDaysCount")
@@ -55,15 +54,6 @@ public class MeasurementController {
         return modelMapper.map(measurement, MeasurementDTO.class);
     }
 
-    public void checkErrors(BindingResult bindingResult, MeasurementDTO object) {
-        measurementValidator.validate(object, bindingResult);
-        if (bindingResult.hasErrors()) {
-            StringBuilder sb = new StringBuilder();
-            for (FieldError error : bindingResult.getFieldErrors())
-                sb.append(error.getField()).append(" - ").append(error.getDefaultMessage()).append(";");
-            throw new MeasurementIssuesException(sb.toString());
-        }
-    }
 
     @ExceptionHandler
     private ResponseEntity<ErrorResponse> handleRegistrationException(Exception e) {
